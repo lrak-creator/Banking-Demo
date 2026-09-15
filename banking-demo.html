@@ -1,0 +1,404 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Twoline — Digital Banking Demo</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@500;600;700&family=IBM+Plex+Sans:wght@400;500;600&family=IBM+Plex+Mono:wght@400;500&display=swap" rel="stylesheet">
+<style>
+  :root{
+    --bg: #F4F5F7;
+    --surface: #FFFFFF;
+    --ink: #12172B;
+    --ink-soft: #4A5169;
+    --line: #DADDE3;
+    --accent: #2C5AA0;
+    --accent-soft: #E7EEF7;
+    --gold: #B8863F;
+    --gold-soft: #FBF0DE;
+    --green: #2E7D5B;
+    --green-soft: #E6F2EC;
+    --red: #B23A3A;
+    --red-soft: #FBEAEA;
+    --radius: 3px;
+    --sidebar-w: 200px;
+    --topbar-h: 60px;
+  }
+  *{box-sizing:border-box;}
+  body{
+    margin:0; background:var(--bg); color:var(--ink);
+    font-family:'IBM Plex Sans', system-ui, sans-serif; font-size:15px; line-height:1.55;
+    font-variant-numeric:tabular-nums;
+  }
+  h1,h2,h3{font-family:'Space Grotesk', system-ui, sans-serif; font-weight:600; margin:0; color:var(--ink);}
+  .mono{font-family:'IBM Plex Mono', monospace;}
+  a{color:inherit;}
+  button{font-family:inherit; cursor:pointer;}
+  a:focus-visible, button:focus-visible, select:focus-visible, input:focus-visible{outline:2px solid var(--accent); outline-offset:2px;}
+
+  .demo-banner{
+    background:var(--ink); color:#fff; font-size:0.82rem;
+    padding:8px 20px; display:flex; justify-content:space-between; align-items:center; gap:12px; flex-wrap:wrap;
+  }
+  .demo-banner a{color:#fff; text-decoration:underline; text-underline-offset:2px;}
+
+  .topbar{
+    height:var(--topbar-h); background:var(--surface); border-bottom:1px solid var(--line);
+    display:flex; align-items:center; justify-content:space-between; padding:0 20px;
+    position:sticky; top:0; z-index:20; flex-wrap:wrap; gap:10px;
+  }
+  .app-name{font-family:'Space Grotesk', sans-serif; font-weight:700; font-size:1.02rem; display:flex; align-items:center; gap:8px;}
+  .app-name .dot{width:8px; height:8px; background:var(--accent); border-radius:1px; display:inline-block;}
+  .topbar-right{display:flex; align-items:center; gap:14px;}
+  .ledger-status{
+    display:flex; align-items:center; gap:7px; font-size:0.82rem;
+    padding:6px 12px; border-radius:var(--radius);
+  }
+  .ledger-status.ok{background:var(--green-soft); color:var(--green);}
+  .ledger-status .check{font-family:'IBM Plex Mono', monospace;}
+
+  .shell{display:flex; min-height:calc(100vh - var(--topbar-h) - 37px);}
+  .sidebar{width:var(--sidebar-w); flex-shrink:0; background:var(--surface); border-right:1px solid var(--line); padding:20px 0;}
+  .nav-group-label{font-family:'IBM Plex Mono', monospace; font-size:0.72rem; color:var(--ink-soft); padding:0 20px 8px;}
+  .nav-item{
+    display:flex; align-items:center; gap:10px; padding:10px 20px; font-size:0.9rem; color:var(--ink-soft);
+    border-left:2px solid transparent; cursor:pointer; transition:background 0.15s ease, color 0.15s ease, border-color 0.15s ease;
+  }
+  .nav-item:hover{background:var(--bg); color:var(--ink);}
+  .nav-item.active{color:var(--accent); border-left-color:var(--accent); background:var(--accent-soft); font-weight:500;}
+
+  .main{flex-grow:1; padding:32px 36px; max-width:1080px;}
+  .view-head{display:flex; align-items:baseline; justify-content:space-between; gap:16px; margin-bottom:6px; flex-wrap:wrap;}
+  .view-head h1{font-size:1.5rem; letter-spacing:-0.01em;}
+  .view-sub{color:var(--ink-soft); font-size:0.9rem; margin-bottom:28px;}
+
+  .stat-row{display:grid; grid-template-columns:repeat(4,1fr); gap:1px; background:var(--line); border:1px solid var(--line); margin-bottom:32px;}
+  .stat{background:var(--surface); padding:18px 20px;}
+  .stat .k{font-size:0.78rem; color:var(--ink-soft); margin-bottom:8px;}
+  .stat .v{font-family:'Space Grotesk',sans-serif; font-size:1.4rem; font-weight:600;}
+  .stat .v.accent{color:var(--accent);}
+  .stat .v.green{color:var(--green);}
+
+  table{width:100%; border-collapse:collapse; background:var(--surface); border:1px solid var(--line);}
+  th, td{text-align:left; padding:12px 14px; font-size:0.88rem; border-bottom:1px solid var(--line);}
+  th{font-family:'IBM Plex Mono', monospace; font-size:0.72rem; color:var(--ink-soft); font-weight:500; background:var(--bg);}
+  tbody tr:last-child td{border-bottom:none;}
+  tbody tr:hover{background:var(--accent-soft);}
+  td.num, th.num{font-family:'IBM Plex Mono', monospace; text-align:right;}
+
+  .pill{display:inline-block; font-size:0.76rem; font-family:'IBM Plex Mono', monospace; padding:3px 9px; border-radius:var(--radius);}
+  .pill.dr{background:var(--accent-soft); color:var(--accent);}
+  .pill.cr{background:var(--gold-soft); color:var(--gold);}
+  .pill.active{background:var(--green-soft); color:var(--green);}
+
+  /* ---------- Wallet cards ---------- */
+  .wallet-grid{display:grid; grid-template-columns:repeat(3,1fr); gap:1px; background:var(--line); border:1px solid var(--line); margin-bottom:32px;}
+  .wallet-card{background:var(--surface); padding:20px;}
+  .wallet-card .name{font-size:0.86rem; color:var(--ink-soft); margin-bottom:8px;}
+  .wallet-card .bal{font-family:'Space Grotesk',sans-serif; font-size:1.4rem; font-weight:600; margin-bottom:14px;}
+  .wallet-card .limit-bar{height:4px; background:var(--bg); border-radius:2px; overflow:hidden; margin-bottom:6px;}
+  .wallet-card .limit-fill{height:100%; background:var(--accent);}
+  .wallet-card .limit-label{font-size:0.76rem; color:var(--ink-soft);}
+
+  /* ---------- Form ---------- */
+  .form-card{background:var(--surface); border:1px solid var(--line); padding:24px; max-width:460px;}
+  .field{margin-bottom:16px;}
+  .field label{display:block; font-size:0.82rem; color:var(--ink-soft); margin-bottom:6px;}
+  .field select, .field input{
+    width:100%; font-size:0.92rem; padding:10px 12px; border:1px solid var(--line);
+    border-radius:var(--radius); background:var(--surface); color:var(--ink);
+  }
+  .field-note{font-size:0.78rem; color:var(--ink-soft); margin-top:6px;}
+  .form-msg{font-size:0.86rem; padding:10px 12px; border-radius:var(--radius); margin-bottom:16px;}
+  .form-msg.error{background:var(--red-soft); color:var(--red);}
+  .form-msg.success{background:var(--green-soft); color:var(--green);}
+  .btn{
+    display:inline-flex; align-items:center; gap:8px; padding:11px 20px; border-radius:var(--radius);
+    font-size:0.9rem; font-weight:500; border:1px solid transparent; background:var(--ink); color:#fff;
+  }
+  .btn:hover{background:var(--accent);}
+
+  .empty-note{color:var(--ink-soft); font-size:0.88rem; padding:14px 4px;}
+  .audit-hash{font-family:'IBM Plex Mono', monospace; font-size:0.76rem; color:var(--ink-soft);}
+
+  @media (max-width: 860px){
+    .wallet-grid{grid-template-columns:1fr;}
+  }
+  @media (max-width: 780px){
+    .shell{flex-direction:column;}
+    .sidebar{width:100%; border-right:none; border-bottom:1px solid var(--line); display:flex; overflow-x:auto; padding:8px 0;}
+    .nav-group-label{display:none;}
+    .nav-item{border-left:none; border-bottom:2px solid transparent; white-space:nowrap;}
+    .nav-item.active{border-left:none; border-bottom-color:var(--accent);}
+    .main{padding:24px 18px;}
+    .stat-row{grid-template-columns:repeat(2,1fr);}
+    table{display:block; overflow-x:auto;}
+  }
+</style>
+</head>
+<body>
+
+<div class="demo-banner">
+  <span>Demo build for the <strong>Digital Banking &amp; Double-Entry Wallet System</strong> project — sample wallets and transactions, no real money moves.</span>
+  <a href="portfolio.html">← Back to portfolio</a>
+</div>
+
+<div class="topbar">
+  <div class="app-name"><span class="dot"></span> Twoline</div>
+  <div class="topbar-right">
+    <div class="ledger-status ok" id="ledgerStatus"></div>
+  </div>
+</div>
+
+<div class="shell">
+  <nav class="sidebar" id="sidebar"></nav>
+  <main class="main" id="main"></main>
+</div>
+
+<script>
+(function(){
+
+  /* ---------------- Mock data ---------------- */
+
+  var wallets = [
+    {id:'main', name:'Main Wallet', balance:84500, dailyLimit:50000, usedToday:18000},
+    {id:'savings', name:'Savings Pocket', balance:250000, dailyLimit:20000, usedToday:0},
+    {id:'business', name:'Business Wallet', balance:132750, dailyLimit:100000, usedToday:45000}
+  ];
+
+  var beneficiaries = [
+    {name:'Liza Montano', detail:'GCash Wallet \u2022\u2022\u2022\u2022 4821'},
+    {name:'Renzo Diaz', detail:'BPI \u2022\u2022\u2022\u2022 1190'},
+    {name:'FreshMart Supplies', detail:'BDO \u2022\u2022\u2022\u2022 7734'},
+    {name:'Aldrin Cruz', detail:'Twoline Wallet \u2022\u2022\u2022\u2022 0092'}
+  ];
+
+  // Every entry belongs to a txnId; each txn always has one dr and one cr row of equal amount.
+  var ledger = [
+    {txnId:'TXN-8801', date:'Sep 10, 09:12', desc:'Deposit to Main Wallet', dr:'Main Wallet', cr:'External Funding Source', amount:50000},
+    {txnId:'TXN-8802', date:'Sep 12, 14:03', desc:'Transfer to Liza Montano', dr:'Beneficiary Payable \u2014 Liza Montano', cr:'Main Wallet', amount:12000},
+    {txnId:'TXN-8803', date:'Sep 13, 08:47', desc:'Transfer to Savings Pocket', dr:'Savings Pocket', cr:'Main Wallet', amount:6000},
+    {txnId:'TXN-8804', date:'Sep 14, 16:20', desc:'Withdrawal from Business Wallet', dr:'External Payout', cr:'Business Wallet', amount:8000},
+    {txnId:'TXN-8805', date:'Sep 14, 17:05', desc:'Deposit to Business Wallet', dr:'Business Wallet', cr:'External Funding Source', amount:37000}
+  ];
+
+  var audit = [
+    {time:'Sep 14, 17:05', actor:'System', event:'Posted TXN-8805 \u2014 Deposit to Business Wallet, \u20b137,000.', hash:hashFor('TXN-8805')},
+    {time:'Sep 14, 16:20', actor:'Karl Tuazon', event:'Posted TXN-8804 \u2014 Withdrawal from Business Wallet, \u20b18,000.', hash:hashFor('TXN-8804')},
+    {time:'Sep 13, 08:47', actor:'Karl Tuazon', event:'Posted TXN-8803 \u2014 Internal transfer Main \u2192 Savings, \u20b16,000.', hash:hashFor('TXN-8803')},
+    {time:'Sep 12, 14:03', actor:'Karl Tuazon', event:'Posted TXN-8802 \u2014 Transfer to beneficiary Liza Montano, \u20b112,000.', hash:hashFor('TXN-8802')},
+    {time:'Sep 10, 09:12', actor:'System', event:'Posted TXN-8801 \u2014 Deposit to Main Wallet, \u20b150,000.', hash:hashFor('TXN-8801')}
+  ];
+
+  var state = { view:'dashboard' };
+  var txnCounter = 8806;
+
+  var navItems = [
+    {id:'dashboard', label:'Dashboard'},
+    {id:'wallets', label:'Wallets'},
+    {id:'send', label:'Send Money'},
+    {id:'beneficiaries', label:'Beneficiaries'},
+    {id:'ledger', label:'Ledger'},
+    {id:'audit', label:'Audit History'}
+  ];
+
+  /* ---------------- Helpers ---------------- */
+
+  function peso(n){ return '\u20b1' + n.toLocaleString('en-US'); }
+  function walletBy(id){ return wallets.filter(function(w){ return w.id === id; })[0]; }
+  function walletByName(name){ return wallets.filter(function(w){ return w.name === name; })[0]; }
+
+  function hashFor(seed){
+    var s = seed + 'twoline-salt';
+    var h = 0;
+    for(var i=0;i<s.length;i++){ h = (h * 31 + s.charCodeAt(i)) >>> 0; }
+    var hex = h.toString(16);
+    while(hex.length < 8) hex = '0' + hex;
+    return hex.slice(0,4) + '\u2026' + hex.slice(-4);
+  }
+
+  function ledgerTotals(){
+    var totalDr = 0, totalCr = 0;
+    ledger.forEach(function(e){ totalDr += e.amount; totalCr += e.amount; });
+    return {dr: totalDr, cr: totalCr};
+  }
+
+  function postTransaction(desc, drAccount, crAccount, amount){
+    var id = 'TXN-' + (txnCounter++);
+    ledger.unshift({txnId:id, date:'Just now', desc:desc, dr:drAccount, cr:crAccount, amount:amount});
+    audit.unshift({time:'Just now', actor:'Karl Tuazon', event:'Posted ' + id + ' \u2014 ' + desc + ', ' + peso(amount) + '.', hash:hashFor(id)});
+    return id;
+  }
+
+  /* ---------------- Renderers ---------------- */
+
+  function renderSidebar(){
+    var html = '<div class="nav-group-label">Menu</div>';
+    navItems.forEach(function(item){
+      var active = item.id === state.view ? ' active' : '';
+      html += '<div class="nav-item' + active + '" data-view="' + item.id + '">' + item.label + '</div>';
+    });
+    document.getElementById('sidebar').innerHTML = html;
+    document.querySelectorAll('.nav-item').forEach(function(el){
+      el.addEventListener('click', function(){ state.view = el.getAttribute('data-view'); render(); });
+    });
+  }
+
+  function renderLedgerStatus(){
+    var t = ledgerTotals();
+    var el = document.getElementById('ledgerStatus');
+    el.innerHTML = '<span class="check">\u2713</span> Ledger balanced \u2014 ' + peso(t.dr) + ' = ' + peso(t.cr);
+  }
+
+  function statCard(k, v, cls){
+    return '<div class="stat"><div class="k">' + k + '</div><div class="v' + (cls ? ' ' + cls : '') + '">' + v + '</div></div>';
+  }
+
+  function renderDashboard(){
+    var totalBalance = wallets.reduce(function(a,w){ return a + w.balance; }, 0);
+    var monthVolume = ledger.reduce(function(a,e){ return a + e.amount; }, 0);
+    var html = '<div class="view-head"><h1>Dashboard</h1></div>';
+    html += '<p class="view-sub">Overview across all wallets.</p>';
+    html += '<div class="stat-row">';
+    html += statCard('Total balance', peso(totalBalance), 'accent');
+    html += statCard('Transactions this period', ledger.length);
+    html += statCard('Volume posted', peso(monthVolume));
+    html += statCard('Audit status', 'Balanced', 'green');
+    html += '</div>';
+
+    html += '<h2 style="font-size:1.05rem; margin-bottom:12px;">Recent activity</h2>';
+    html += renderLedgerTable(ledger.slice(0,5), false);
+    document.getElementById('main').innerHTML = html;
+  }
+
+  function renderWallets(){
+    var html = '<div class="view-head"><h1>Wallets</h1></div>';
+    html += '<p class="view-sub">' + wallets.length + ' wallets, with daily transfer limits enforced per wallet.</p>';
+    html += '<div class="wallet-grid">';
+    wallets.forEach(function(w){
+      var pct = Math.min(100, Math.round((w.usedToday / w.dailyLimit) * 100));
+      html += '<div class="wallet-card"><div class="name">' + w.name + '</div><div class="bal">' + peso(w.balance) + '</div>';
+      html += '<div class="limit-bar"><div class="limit-fill" style="width:' + pct + '%"></div></div>';
+      html += '<div class="limit-label">' + peso(w.usedToday) + ' used of ' + peso(w.dailyLimit) + ' daily limit</div></div>';
+    });
+    html += '</div>';
+    document.getElementById('main').innerHTML = html;
+  }
+
+  function renderSend(){
+    var html = '<div class="view-head"><h1>Send Money</h1></div>';
+    html += '<p class="view-sub">Transfers are checked against each wallet\u2019s remaining daily limit before posting.</p>';
+    html += '<div class="form-card"><div id="sendMsg"></div>';
+    html += '<div class="field"><label for="fromWallet">From wallet</label><select id="fromWallet">';
+    wallets.forEach(function(w){
+      var remaining = w.dailyLimit - w.usedToday;
+      html += '<option value="' + w.id + '">' + w.name + ' \u2014 ' + peso(w.balance) + ' (' + peso(remaining) + ' left today)</option>';
+    });
+    html += '</select></div>';
+    html += '<div class="field"><label for="toBeneficiary">To</label><select id="toBeneficiary">';
+    beneficiaries.forEach(function(b){ html += '<option value="' + b.name + '">' + b.name + ' \u2014 ' + b.detail + '</option>'; });
+    html += '</select></div>';
+    html += '<div class="field"><label for="amount">Amount</label><input type="number" id="amount" placeholder="0" min="1"></div>';
+    html += '<div class="field"><label for="note">Note (optional)</label><input type="text" id="note" placeholder="What\u2019s this for?"></div>';
+    html += '<button class="btn" id="sendBtn">Send transfer</button></div>';
+    document.getElementById('main').innerHTML = html;
+    document.getElementById('sendBtn').addEventListener('click', handleSend);
+  }
+
+  function handleSend(){
+    var fromId = document.getElementById('fromWallet').value;
+    var toName = document.getElementById('toBeneficiary').value;
+    var amount = parseInt(document.getElementById('amount').value, 10);
+    var note = document.getElementById('note').value;
+    var wallet = walletBy(fromId);
+    var msgEl = document.getElementById('sendMsg');
+
+    if(!amount || amount <= 0){
+      msgEl.innerHTML = '<div class="form-msg error">Enter an amount greater than \u20b10.</div>';
+      return;
+    }
+    var remaining = wallet.dailyLimit - wallet.usedToday;
+    if(amount > remaining){
+      msgEl.innerHTML = '<div class="form-msg error">This transfer exceeds ' + wallet.name + '\u2019s remaining daily limit. You have ' + peso(remaining) + ' left today \u2014 reduce the amount or choose a different wallet.</div>';
+      return;
+    }
+    if(amount > wallet.balance){
+      msgEl.innerHTML = '<div class="form-msg error">' + wallet.name + ' only has ' + peso(wallet.balance) + ' available.</div>';
+      return;
+    }
+
+    wallet.balance -= amount;
+    wallet.usedToday += amount;
+    var desc = 'Transfer to ' + toName + (note ? ' (' + note + ')' : '');
+    var id = postTransaction(desc, 'Beneficiary Payable \u2014 ' + toName, wallet.name, amount);
+    msgEl.innerHTML = '<div class="form-msg success">' + id + ' posted \u2014 ' + peso(amount) + ' sent to ' + toName + ' from ' + wallet.name + '.</div>';
+    document.getElementById('amount').value = '';
+    document.getElementById('note').value = '';
+    renderLedgerStatus();
+  }
+
+  function renderBeneficiaries(){
+    var html = '<div class="view-head"><h1>Beneficiaries</h1></div>';
+    html += '<p class="view-sub">' + beneficiaries.length + ' saved beneficiaries.</p>';
+    html += '<table><thead><tr><th>Name</th><th>Account</th></tr></thead><tbody>';
+    beneficiaries.forEach(function(b){ html += '<tr><td>' + b.name + '</td><td>' + b.detail + '</td></tr>'; });
+    html += '</tbody></table>';
+    document.getElementById('main').innerHTML = html;
+  }
+
+  function renderLedgerTable(rows, showBalanceCheck){
+    var html = '';
+    if(showBalanceCheck){
+      var t = ledgerTotals();
+      html += '<p class="view-sub" style="margin-bottom:16px;">Total debits ' + peso(t.dr) + ' \u2014 total credits ' + peso(t.cr) + ' \u2014 always equal by construction.</p>';
+    }
+    html += '<table><thead><tr><th>Txn</th><th>Date</th><th>Description</th><th>Debit account</th><th>Credit account</th><th class="num">Amount</th></tr></thead><tbody>';
+    if(rows.length === 0) html += '<tr><td colspan="6" class="empty-note">No transactions yet.</td></tr>';
+    rows.forEach(function(e){
+      html += '<tr><td class="mono">' + e.txnId + '</td><td class="mono">' + e.date + '</td><td>' + e.desc + '</td>' +
+        '<td><span class="pill dr">DR</span> ' + e.dr + '</td><td><span class="pill cr">CR</span> ' + e.cr + '</td>' +
+        '<td class="num mono">' + peso(e.amount) + '</td></tr>';
+    });
+    html += '</tbody></table>';
+    return html;
+  }
+
+  function renderLedger(){
+    var html = '<div class="view-head"><h1>Ledger</h1></div>';
+    html += renderLedgerTable(ledger, true);
+    document.getElementById('main').innerHTML = html;
+  }
+
+  function renderAudit(){
+    var html = '<div class="view-head"><h1>Audit History</h1></div>';
+    html += '<p class="view-sub">Append-only event log \u2014 every posted transaction is recorded with a reference hash.</p>';
+    html += '<table><thead><tr><th>Time</th><th>Actor</th><th>Event</th><th>Reference</th></tr></thead><tbody>';
+    audit.forEach(function(a){
+      html += '<tr><td class="mono">' + a.time + '</td><td>' + a.actor + '</td><td>' + a.event + '</td><td class="audit-hash">' + a.hash + '</td></tr>';
+    });
+    html += '</tbody></table>';
+    document.getElementById('main').innerHTML = html;
+  }
+
+  var viewRenderers = {
+    dashboard: renderDashboard,
+    wallets: renderWallets,
+    send: renderSend,
+    beneficiaries: renderBeneficiaries,
+    ledger: renderLedger,
+    audit: renderAudit
+  };
+
+  function render(){
+    renderSidebar();
+    viewRenderers[state.view]();
+    renderLedgerStatus();
+  }
+
+  render();
+})();
+</script>
+</body>
+</html>
